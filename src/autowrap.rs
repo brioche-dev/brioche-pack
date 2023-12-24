@@ -16,7 +16,7 @@ pub struct AutowrapOptions<'a> {
 }
 
 pub fn autowrap(options: AutowrapOptions) -> Result<(), AutowrapError> {
-    let program_file = std::fs::read(&options.program_path)?;
+    let program_file = std::fs::read(options.program_path)?;
     let program_object = goblin::Object::parse(&program_file)?;
 
     match program_object {
@@ -35,17 +35,17 @@ pub fn autowrap(options: AutowrapOptions) -> Result<(), AutowrapError> {
                 }
 
                 let pack = dynamic_ld_linux_elf_pack(DynamicLdLinuxElfPackOptions {
-                    program_path: &options.program_path,
+                    program_path: options.program_path,
                     program_contents: &program_file,
-                    resources_dir: &options.resources_dir,
+                    resources_dir: options.resources_dir,
                     interpreter_path: &interpreter_path,
-                    library_search_paths: &options.library_search_paths,
-                    input_paths: &options.input_paths,
+                    library_search_paths: options.library_search_paths,
+                    input_paths: options.input_paths,
                     elf: &elf,
                 })?;
 
-                let mut packed = std::fs::File::open(&options.packed_exec_path)?;
-                let mut packed_program = std::fs::File::create(&options.program_path)?;
+                let mut packed = std::fs::File::open(options.packed_exec_path)?;
+                let mut packed_program = std::fs::File::create(options.program_path)?;
                 std::io::copy(&mut packed, &mut packed_program)?;
 
                 crate::inject_pack(&mut packed_program, &pack)?;
@@ -82,7 +82,7 @@ fn dynamic_ld_linux_elf_pack(
         .file_name()
         .ok_or_else(|| AutowrapError::InvalidPath)?;
     let resource_program_path = crate::resources::add_named_blob(
-        &options.resources_dir,
+        options.resources_dir,
         std::io::Cursor::new(&options.program_contents),
         is_path_executable(options.program_path)?,
         program_name,
@@ -94,7 +94,7 @@ fn dynamic_ld_linux_elf_pack(
         .ok_or_else(|| AutowrapError::InvalidPath)?;
     let interpreter = std::fs::File::open(options.interpreter_path)?;
     let resource_interpreter_path = crate::resources::add_named_blob(
-        &options.resources_dir,
+        options.resources_dir,
         interpreter,
         is_path_executable(options.interpreter_path)?,
         interpreter_name,
@@ -109,7 +109,7 @@ fn dynamic_ld_linux_elf_pack(
 
         let library = std::fs::File::open(&library_path)?;
         let resource_library_path = crate::resources::add_named_blob(
-            &options.resources_dir,
+            options.resources_dir,
             library,
             is_path_executable(&library_path)?,
             library_name,
@@ -117,7 +117,7 @@ fn dynamic_ld_linux_elf_pack(
         let resource_library_dir = resource_library_path
             .parent()
             .expect("no parent dir for library path");
-        let resource_library_dir = <[u8]>::from_path(&resource_library_dir)
+        let resource_library_dir = <[u8]>::from_path(resource_library_dir)
             .ok_or_else(|| AutowrapError::InvalidPath)?
             .into();
 
@@ -146,7 +146,7 @@ fn find_library(
     // Search for the library from the search paths passed to `ld`, searching
     // for a filename match.
     for lib_path in options.library_search_paths {
-        let lib_path = lib_path.join(&library_name);
+        let lib_path = lib_path.join(library_name);
 
         if lib_path.is_file() {
             return Ok(lib_path);
@@ -165,7 +165,7 @@ fn find_library(
     // Search for the library from the input files passed to `ld`, searching
     // for an ELF file with a matching `DT_SONAME` section.
     for input_path in options.input_paths {
-        if let Ok(bytes) = std::fs::read(&input_path) {
+        if let Ok(bytes) = std::fs::read(input_path) {
             if let Ok(elf) = goblin::elf::Elf::parse(&bytes) {
                 if elf.soname == Some(library_name) {
                     return Ok(input_path.to_owned());
@@ -174,7 +174,7 @@ fn find_library(
         }
     }
 
-    return Err(AutowrapError::LibraryNotFound(library_name.to_string()));
+    Err(AutowrapError::LibraryNotFound(library_name.to_string()))
 }
 
 #[derive(Debug, thiserror::Error)]

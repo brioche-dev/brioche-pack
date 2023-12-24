@@ -39,7 +39,7 @@ impl Pack {
                     library_paths,
                 } => {
                     paths.push(path.clone());
-                    paths.extend(library_paths.iter().map(|path| path.clone()));
+                    paths.extend(library_paths.iter().cloned());
                 }
             }
         }
@@ -124,7 +124,7 @@ pub fn extract_pack(mut reader: impl std::io::Read) -> Result<Pack, ExtractPackE
         .try_into()
         .map_err(|_| ExtractPackError::MalformedMarker)?;
 
-    let (program, pack) = program.split_at(program.len().wrapping_sub(length as usize));
+    let (program, pack) = program.split_at(program.len().wrapping_sub(length));
     let program = program
         .strip_suffix(&length_bytes)
         .ok_or_else(|| ExtractPackError::MalformedMarker)?;

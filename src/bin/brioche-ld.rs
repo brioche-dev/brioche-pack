@@ -84,7 +84,7 @@ fn run() -> Result<ExitCode, LdError> {
         let exit_code = status
             .code()
             .and_then(|code| u8::try_from(code).ok())
-            .map(|code| ExitCode::from(code))
+            .map(ExitCode::from)
             .unwrap_or(ExitCode::FAILURE);
         return Ok(exit_code);
     }

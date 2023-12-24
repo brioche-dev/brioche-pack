@@ -41,10 +41,10 @@ pub fn add_named_blob(
     let _ = std::fs::remove_file(&alias_path);
     let blob_pack_relative_path = pathdiff::diff_paths(&blob_path, &alias_dir)
         .expect("blob path is not a prefix of alias path");
-    std::os::unix::fs::symlink(&blob_pack_relative_path, &alias_path)?;
+    std::os::unix::fs::symlink(blob_pack_relative_path, &alias_path)?;
 
     let alias_path = alias_path
-        .strip_prefix(&resources_dir)
+        .strip_prefix(resources_dir)
         .expect("alias path is not in resources dir");
     Ok(alias_path.to_owned())
 }

@@ -28,8 +28,7 @@ where
     {
         let encoded: Cow<'de, str> = serde::de::Deserialize::deserialize(deserializer)?;
         let decoded = urlencoding::decode_binary(encoded.as_bytes());
-        let deserialized =
-            T::try_from(decoded.into_owned()).map_err(|error| serde::de::Error::custom(error))?;
+        let deserialized = T::try_from(decoded.into_owned()).map_err(serde::de::Error::custom)?;
         Ok(deserialized)
     }
 }

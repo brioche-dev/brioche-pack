@@ -32,7 +32,7 @@ fn run() -> Result<(), PackedError> {
                 .to_path()
                 .map_err(|_| PackedError::InvalidPath)?;
             let interpreter = resource_dir.join(interpreter);
-            let mut command = std::process::Command::new(&interpreter);
+            let mut command = std::process::Command::new(interpreter);
             if !library_paths.is_empty() {
                 let mut ld_library_path = bstr::BString::default();
                 for (n, library_path) in library_paths.iter().enumerate() {
@@ -53,7 +53,7 @@ fn run() -> Result<(), PackedError> {
                 if let Some(env_library_path) = std::env::var_os("LD_LIBRARY_PATH") {
                     let env_library_path = <[u8]>::from_os_str(&env_library_path)
                         .ok_or_else(|| PackedError::InvalidPath)?;
-                    if env_library_path.len() > 0 {
+                    if !env_library_path.is_empty() {
                         ld_library_path.push(b':');
                         ld_library_path.extend(env_library_path);
                     }
@@ -76,7 +76,7 @@ fn run() -> Result<(), PackedError> {
                 .program
                 .to_path()
                 .map_err(|_| PackedError::InvalidPath)?;
-            let program = resource_dir.join(&program).canonicalize()?;
+            let program = resource_dir.join(program).canonicalize()?;
             command.arg(program);
 
             command.args(args);
